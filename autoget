@@ -1,0 +1,10 @@
+#!/bin/bash
+
+./task $1 | while read -r line;do
+	name=`echo $line | tr -s ' ' | cut -d ' ' -f 1`;
+	start_t=`echo $line | tr -s ' ' | cut -d ' ' -f 2`;
+	end_t=`echo $line | tr -s ' ' | cut -d ' ' -f 3`;
+	echo "Acquiring task $name...";
+	./getdata $name $start_t $end_t;
+done
+

@@ -1,0 +1,33 @@
+#!/usr/bin/python
+
+from requests import get
+from config import config
+from sys import argv
+import json
+
+# Limit - only display the latest N tasks
+limit = 0
+
+if len(argv) > 1:
+    limit = int(argv[1])
+
+namenode_host = config['master']
+resp = get('http://%s:8088/ws/v1/cluster/apps?states=FINISHED' % namenode_host)
+
+try:
+    task_list = json.loads(resp.content)['apps']['app']
+except KeyError:
+    print 'No tasks in record.'
+    exit(0)
+
+task_list = sorted(task_list, cmp=lambda x,y: cmp(x['startedTime'], y['startedTime']))
+
+if limit > 0:
+    task_list = task_list[-limit:]
+
+# print 'Task Name             Start Time\tEnd Time'
+for task in task_list:
+    task['name'] = task['name'].replace(' ', '_')
+    task['name'] = task['name'].ljust(21)
+    print '%s %s\t%s' % (task['name'], task['startedTime'], task['finishedTime'])
+
