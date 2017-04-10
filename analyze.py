@@ -5,6 +5,7 @@ from copy import deepcopy
 from sys import argv
 import os.path
 import re
+#import crash_on_ipy
 
 decimal = re.compile(r'^\d+\.?\d*$')
 integer = re.compile(r'^\d+$')
@@ -12,7 +13,7 @@ integer = re.compile(r'^\d+$')
 options = dict()
 
 
-def parse(text):
+def parse(text, fields):
     time, content = text.split(' ', 1)
     content = content.split(': ')[1]
     time = int(time) // 1000  # Get seconds. Also use // for integer division
@@ -20,14 +21,15 @@ def parse(text):
     res = dict()
     for item in items:
         key, value = item.split('=')
-        if integer.match(value):
-            value = int(value)
-        elif decimal.match(value):
-            value = float(value)
-        else:
-            pass
+        if key in fields:
+            if integer.match(value):
+                value = int(value)
+            elif decimal.match(value):
+                value = float(value)
+            else:
+                pass
 
-        res[key] = value
+            res[key] = value
 
     res['time'] = time
     return res
@@ -39,20 +41,25 @@ def help_info():
 
 
 def extract_args(args):
+    global options
     try:
-        options, argvs = getopt(args, 'n:d:', ['namenode=', 'datanode='])
-        for key, value in options:
+        opts, argvs = getopt(args, 'an:d:', ['absolute', 'namenode=', 'datanode='])
+        options['absolute'] = False
+        for key, value in opts:
             if key in ('-d', '--datanode'):
                 options['datanode_metrics'] = value.split(',')
             if key in ('-n', '--namenode'):
                 options['namenode_metrics'] = value.split(',')
+            if key in ('-a', '--absolute'):
+                options['absolute'] = True
+
         options['task'] = argvs[0]
 
         options['namenode_host'] = config['master']
         options['datanode_host'] = config['slaves']
 
-        print 'Datanode Metrics: %s ' % ', '.join(options['datanode_metrics'])
-        print 'Namenode Metrics: %s ' % ', '.join(options['namenode_metrics'])
+        #print 'Datanode Metrics: %s ' % ', '.join(options['datanode_metrics'])
+        #print 'Namenode Metrics: %s ' % ', '.join(options['namenode_metrics'])
     except GetoptError, KeyError:
         help_info()
 
@@ -65,7 +72,7 @@ def compare_time(t1, t2):
 def compute_relative(metric_list):
     baseline = deepcopy(metric_list[0])
     for i in range(len(metric_list)):
-        for key in metric_list[i].keys():
+        for key in baseline.keys():
             if isinstance(baseline[key], (int, float)):
                 metric_list[i][key] -= baseline[key]
 
@@ -103,31 +110,63 @@ if __name__ == '__main__':
         lines = f.readlines()
         table[namenode] = list()
         for line in lines:
-            table[namenode].append(parse(line))
+            table[namenode].append(parse(line, options['namenode_metrics']))
 
     for datanode in options['datanode_host']:
         with open('%s/%s.datanode.out' % (task, datanode), 'r') as f:
             lines = f.readlines()
             table[datanode] = list()
             for line in lines:
-                table[datanode].append(parse(line))
+                table[datanode].append(parse(line, options['datanode_metrics']))
 
     for host in options['datanode_host']:
         table[host] = compress_slave(table[namenode], table[host])       
-        compute_relative(table[host])
 
-    compute_relative(table[namenode])
+    if not options['absolute']:
+        compute_relative(table[namenode])
+        for host in options['datanode_host']:
+            compute_relative(table[host])
+    
+    aggregated_table = dict()
 
     for host in table.keys():
         for field in table[host][0].keys():
-            if not host == namenode and field == 'time':
-                continue
-            csv += '%s.%s,' % (host, field)
-    csv += '\r\n'
+            if field not in aggregated_table:
+                aggregated_table[field] = list() 
+        for i in range(table[host].__len__()):
+            for field, value in table[host][i].items():
+                if i >= len(aggregated_table[field]):
+                    aggregated_table[field].append(int(value))
+                else:
+                    if field == 'time' and host in datanode:
+                        continue
+                    aggregated_table[field][i] += int(value)
+    
+    #for host in table.keys():
+    #    for field in table[host][0].keys():
+    #        if not host == namenode and field == 'time':
+    #            continue
+    #        csv += '%s.%s,' % (host, field)
+    #csv += '\r\n'
+    
+    fields = []
+    for field in aggregated_table.keys():
+        csv += '%s,' % field
+        fields.append(field)
+    csv += '\n'
 
-    for i in range(len(table[namenode])):
-        for host in table.keys():
-            for value in table[host][i]:
-                csv += '%s,' % str(value)
-        csv += '\r\n'
+    for i in range(len(aggregated_table[fields[0]])):
+        for key in fields:
+            csv += '%s,' % str(aggregated_table[key][i])
+        csv += '\n';
 
+    #for i in range(len(table[namenode])):
+    #    for host in table.keys():
+    #        index = i if (i < len(table[host])) else len(table[host]) - 1
+    #        for k, value in table[host][index].items():
+    #            if not host == namenode and k == 'time':
+    #                continue
+    #            csv += '%s,' % str(value)
+    #    csv += '\r\n'
+
+    print csv

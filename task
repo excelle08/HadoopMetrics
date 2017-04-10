@@ -3,13 +3,25 @@
 from requests import get
 from config import config
 from sys import argv
+from datetime import datetime
+from getopt import getopt, GetoptError
 import json
 
 # Limit - only display the latest N tasks
 limit = 0
+human_time = False
 
-if len(argv) > 1:
-    limit = int(argv[1])
+try:
+    opts, argvs = getopt(argv[1:], 'h', ['human-time'])
+    for key, value in opts:
+        if key in ('-h', '--human-time'):
+            human_time = True
+    limit = int(argvs[0])
+except IndexError:
+    limit = 0
+except (GetoptError, KeyError) as e:
+    print e.message
+    exit(0)
 
 namenode_host = config['master']
 resp = get('http://%s:8088/ws/v1/cluster/apps?states=FINISHED' % namenode_host)
@@ -28,6 +40,12 @@ if limit > 0:
 # print 'Task Name             Start Time\tEnd Time'
 for task in task_list:
     task['name'] = task['name'].replace(' ', '_')
-    task['name'] = task['name'].ljust(21)
-    print '%s %s\t%s' % (task['name'], task['startedTime'], task['finishedTime'])
+    #task['name'] = task['name'].ljust(21)
+    if human_time:
+        start_dt = datetime.fromtimestamp(int(task['startedTime']) / 1000)
+        end_dt = datetime.fromtimestamp(int(task['finishedTime']) / 1000)
+        task_duration = end_dt - start_dt
+        print '%s %s\t%s -> %s' % (task['name'], str(start_dt), str(end_dt), str(task_duration))
+    else:
+        print '%s %s\t%s' % (task['name'], task['startedTime'], task['finishedTime'])
 

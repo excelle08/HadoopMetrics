@@ -1,0 +1,12 @@
+#!/bin/sh
+dir_list=`find . -type d`
+for dir in $dir_list;
+do
+	if ! [ -f "$dir/brix-40.namenode.out" ];then
+		continue
+	fi
+	filename=`echo $dir | sed 's/\.\///g' | sed 's/\//\-/g' | sed 's/,/;/g'`;
+	./analyze.py --namenode=GetBlockLocations,AddBlockOps --datanode=BytesRead,BytesWritten $dir > $filename.csv
+	./correlation.py --x=GetBlockLocations --y=BytesRead $filename.csv
+	./correlation.py --x=AddBlockOps --y=BytesWritten $filename.csv
+done
