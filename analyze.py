@@ -60,7 +60,7 @@ def extract_args(args):
 
         #print 'Datanode Metrics: %s ' % ', '.join(options['datanode_metrics'])
         #print 'Namenode Metrics: %s ' % ', '.join(options['namenode_metrics'])
-    except GetoptError, KeyError:
+    except (GetoptError, KeyError):
         help_info()
 
 
@@ -158,7 +158,7 @@ if __name__ == '__main__':
     for i in range(len(aggregated_table[fields[0]])):
         for key in fields:
             csv += '%s,' % str(aggregated_table[key][i])
-        csv += '\n';
+        csv += '\n'
 
     #for i in range(len(table[namenode])):
     #    for host in table.keys():
@@ -169,4 +169,4 @@ if __name__ == '__main__':
     #            csv += '%s,' % str(value)
     #    csv += '\r\n'
 
-    print csv
+    print(csv)

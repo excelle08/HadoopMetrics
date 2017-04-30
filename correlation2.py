@@ -50,7 +50,7 @@ def load_csv(fileobj):
             csv[columns[i]].append(cols[i])
 
 
-def process_xy(x_col, y_col):
+'''def process_xy(x_col, y_col):
     global x, y, csv, columns
     j = 0
     y_val = 0
@@ -63,14 +63,14 @@ def process_xy(x_col, y_col):
             continue
         if j > 0:
             if isclose(x[j - 1], float(csv[x_col][i])):
-                if y[j-1] <= float(csv[y_col][i]):
+                if y[j - 1] <= float(csv[y_col][i]):
                     y[j - 1] = float(csv[y_col][i])
                 continue
 
-        if j == 0 or y[j-1] <= float(csv[y_col][i]):
+        if j == 0 or y[j - 1] <= float(csv[y_col][i]):
             x.append(float(csv[x_col][i]))
             y.append(float(csv[y_col][i]))
-            j += 1
+            j += 1   '''
 
 
 def compute_rel():
@@ -111,7 +111,7 @@ def extract_args(args):
                 cfg['x'] = value
             if key in ('-y', '--y'):
                 cfg['y'] = value
-        cfg['file'] = argvs[0]
+        cfg['file'] = argvs[0]         #input file
     except (GetoptError, KeyError):
         help()
 
@@ -121,7 +121,7 @@ if __name__ == '__main__':
     f = open(file_path, 'r')
     load_csv(f)
     f.close()
-    process_xy(config('x'), config('y'))
+    process_xy(config('x'), config('y'))   #process_xy(cfg['x'],cfg['y'])
     b, a, r, n = compute_rel()
     if config('verbose', default=False):
         print ('\tx\t,\ty')

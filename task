@@ -5,7 +5,7 @@ from config import config
 from sys import argv
 from datetime import datetime
 from getopt import getopt, GetoptError
-import json
+import json, operator
 
 # Limit - only display the latest N tasks
 limit = 0
@@ -20,7 +20,7 @@ try:
 except IndexError:
     limit = 0
 except (GetoptError, KeyError) as e:
-    print e.message
+    print(e.message)
     exit(0)
 
 namenode_host = config['master']
@@ -29,10 +29,10 @@ resp = get('http://%s:8088/ws/v1/cluster/apps?states=FINISHED' % namenode_host)
 try:
     task_list = json.loads(resp.content)['apps']['app']
 except KeyError:
-    print 'No tasks in record.'
+    print('No tasks in record.')
     exit(0)
 
-task_list = sorted(task_list, cmp=lambda x,y: cmp(x['startedTime'], y['startedTime']))
+task_list = sorted(task_list, cmp=lambda x, y: operator.ge(x['startedTime'], y['startedTime']))
 
 if limit > 0:
     task_list = task_list[-limit:]
@@ -45,7 +45,7 @@ for task in task_list:
         start_dt = datetime.fromtimestamp(int(task['startedTime']) / 1000)
         end_dt = datetime.fromtimestamp(int(task['finishedTime']) / 1000)
         task_duration = end_dt - start_dt
-        print '%s %s\t%s -> %s' % (task['name'], str(start_dt), str(end_dt), str(task_duration))
+        print('%s %s\t%s -> %s' % (task['name'], str(start_dt), str(end_dt), str(task_duration)))
     else:
-        print '%s %s\t%s' % (task['name'], task['startedTime'], task['finishedTime'])
+        print('%s %s\t%s' % (task['name'], task['startedTime'], task['finishedTime']))
 
