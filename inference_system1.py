@@ -41,11 +41,11 @@ namenode_file_new = namenode_file+'_new.csv'
 print('Calculating correlation coefficient of READ OPERATIONS...')
 print('namenode metric for read operation——GetBlockLocations, datanode metric for read operation——BytesRead')
 #os.system('./correlation.py -v --x=GetBlockLocations --y=BytesRead %s' %namenode_file_new)
-correlation_read = subprocess.run(('./correlation.py --x=GetBlockLocations --y=BytesRead %s' %namenode_file_new).split(' '), stdout = subprocess.PIPE)
+correlation_read = subprocess.run(('./correlation.py --ignore-zero-var --x=GetBlockLocations --y=BytesRead %s' %namenode_file_new).split(' '), stdout = subprocess.PIPE)
 print('Calculating correlation coefficient of WRITE OPERATIONS...')
 print('namenode metric for write operation——AddBlockOps, datanode metric for write operation——BytesWritten')
 #os.system('./correlation.py -v --x=AddBlockOps --y=BytesWritten %s' %namenode_file_new)
-correlation_write = subprocess.run(('./correlation.py --x=AddBlockOps --y=BytesWritten %s' %namenode_file_new).split(' '), stdout = subprocess.PIPE)
+correlation_write = subprocess.run(('./correlation.py --ignore-zero-var --x=AddBlockOps --y=BytesWritten %s' %namenode_file_new).split(' '), stdout = subprocess.PIPE)
 
 #print(correlation_read.stdout, correlation_write.stdout)
 read_args = correlation_read.stdout.decode('utf-8').split(',')
@@ -60,9 +60,16 @@ b_write = float(write_args[4])
 for i in range(len(namenode_metric_r)//3, len(namenode_metric_r)):
     datanode_metric_r_infer.append(b_read * float(namenode_metric_r[i]) + a_read)
     datanode_metric_w_infer.append(b_write * float(namenode_metric_w[i]) + a_write)
+'''
 print('Compare our INFERENCE list of datanode read metric(above) and the ACTUAL one(below):')
 print(datanode_metric_r_infer)
 print(datanode_metric_r)
 print('Compare our INFERENCE list of datanode write metric(above) and the ACTUAL one(below):')
 print(datanode_metric_w_infer)
 print(datanode_metric_w)
+'''
+
+print ('BytesRead_Infer,BytesRead,BytesWritten_Infer,BytesWritten')
+for i in range(len(datanode_metric_r)):
+    print (datanode_metric_r_infer[i],',',datanode_metric_r[i],',',datanode_metric_w_infer[i],',',datanode_metric_w[i])
+

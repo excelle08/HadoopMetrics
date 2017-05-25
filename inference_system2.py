@@ -80,8 +80,8 @@ def compute_rel(x,y):
     cov_xy /= n
 
     if isclose(div_x, 0.0) or isclose(div_y, 0.0):
-        stderr.write('\033[1;31m Variance is zero.\033[0m\n')
-        exit(0)
+        #stderr.write('\033[1;31m Variance is zero.\033[0m\n')
+        return 0, y[0], 1, 2
     b = cov_xy / div_x
     a = y_bar - b * x_bar
     r = cov_xy / (math.sqrt(div_x) * math.sqrt(div_y))

@@ -78,8 +78,11 @@ def compute_rel():
     cov_xy = 0
     div_x = 0; div_y = 0
     if n <= 1:
-        stderr.write('\033[1;31m Insufficient samples - Cannot compute.\033[0m\n')
-        exit(0)
+        if config('ignore-zero-var', False):
+            return 0, y[0], 1, 2
+        else:
+            stderr.write('\033[1;31m Insufficient samples - Cannot compute.\033[0m\n')
+            exit(0)
     for i in range(n):
         x_bar += x[i] / n
         y_bar += y[i] / n
@@ -103,7 +106,7 @@ def compute_rel():
 def extract_args(args):
     global cfg
     try:
-        opts, argvs = getopt(args, 'vx:y:', ['verbose', 'x=', 'y='])
+        opts, argvs = getopt(args, 'vx:y:', ['verbose', 'ignore-zero-var', 'x=', 'y='])
         for key, value in opts:
             if key in ('-v', '--verbose'):
                 cfg['verbose'] = True
@@ -111,6 +114,8 @@ def extract_args(args):
                 cfg['x'] = value
             if key in ('-y', '--y'):
                 cfg['y'] = value
+            if key in ('--ignore-zero-var'):
+                cfg['ignore-zero-var'] = True
         cfg['file'] = argvs[0]
     except (GetoptError, KeyError):
         help()
