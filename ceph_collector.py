@@ -21,17 +21,17 @@ def get_config(key, default=None):
 
 def help():
     print ('Usage: %s [OPTiONS...]' % argv[0])
-    print ('--prefix\t\t Prefix of hostnames')
-    print ('--master\t\t ID of master machine')
-    print ('--slaves\t\t IDs of slave machines')
-    print ('--name\t\t Name of application')
-    print ('--category-master\t\t Category in master')
-    print ('--category-slave\t\t Category in slave')
-    print ('--path\t\t Path')
-    print ('--date\t\t Date of run. For the use of suffix')
-    print ('--master-fields\t\t Master fields')
-    print ('--slave-fields\t\t Slave fields')
-    print ('--output\t\t Output file')
+    print ('--prefix           Prefix of hostnames')
+    print ('--master           ID of master machine')
+    print ('--slaves           IDs of slave machines')
+    print ('--name             Name of application')
+    print ('--category-master  Category in master')
+    print ('--category-slave   Category in slave')
+    print ('--path             Path')
+    print ('--date             Date of run. For the use of suffix')
+    print ('--master-fields    Master fields')
+    print ('--slave-fields     Slave fields')
+    print ('--output           Output file')
 
 
 def extract_args(args):
@@ -61,22 +61,22 @@ def uniformize(master_table, slave_tables):
     slave_fields = get_config('slave-fields')
     new_table.addcol('epoch')
     for f in master_fields:
-        new_table.addcol(f)
+        new_table.addcol('master-%s' % f)
     for f in slave_fields:
-        new_table.addcol(f)
+        new_table.addcol('slaves-%s' % f)
 
     index = 0
     for line in master_table:
         data_line = dict(epoch=line['epoch'])
         for k in master_fields:
-            data_line[k] = line[k]
+            data_line['master-%s' % k] = line[k]
         try:
             for table in slave_tables:
                 for k in slave_fields:
-                    if k in data_line:
-                        data_line[k] += table[index][k]
+                    if 'slaves-%s' % k in data_line.keys():
+                        data_line['slaves-%s' % k] += table[index][k]
                     else:
-                        data_line[k] = table[index][k]
+                        data_line['slaves-%s' % k] = table[index][k]
             new_table.addline(data_line)
         except IndexError:
             break
