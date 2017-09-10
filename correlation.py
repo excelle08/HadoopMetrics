@@ -120,6 +120,7 @@ def extract_args(args):
     except (GetoptError, KeyError):
         help()
 
+
 if __name__ == '__main__':
     extract_args(argv[1:])
     file_path = config('file')

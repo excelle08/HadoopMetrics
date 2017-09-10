@@ -13,11 +13,8 @@ datanode_metric_w = list()
 datanode_metric_r_infer = list()
 datanode_metric_w_infer = list()
 
-
-
 with open(namenode_file, 'r') as f:
     lines = f.readlines()
-    #lines_cut = lines[:len(lines) // 2]
     lines_before = lines[1:]
     lines_cut = lines_before[::5]
 
@@ -30,23 +27,6 @@ with open(namenode_file, 'r') as f:
         namenode_metric_w.append(float(line.split(',')[1]))
         datanode_metric_r.append(float(line.split(',')[2]))
         datanode_metric_w.append(float(line.split(',')[3]))
-
-#with open(namenode_file+'_new.csv', 'w') as f:
- #   f.writelines(lines_cut)
-
-'''
-namenode_file_new = namenode_file+'_new.csv'
-
-print('Calculating correlation coefficient of READ OPERATIONS...')
-print('namenode metric for read operation——GetBlockLocations, datanode metric for read operation——BytesRead')
-#os.system('./correlation.py -v --x=GetBlockLocations --y=BytesRead %s' %namenode_file_new)
-correlation_read = subprocess.run(('./correlation.py --x=GetBlockLocations --y=BytesRead %s' %namenode_file_new).split(' '), stdout = subprocess.PIPE)
-print('Calculating correlation coefficient of WRITE OPERATIONS...')
-print('namenode metric for write operation——AddBlockOps, datanode metric for write operation——BytesWritten')
-#os.system('./correlation.py -v --x=AddBlockOps --y=BytesWritten %s' %namenode_file_new)
-correlation_write = subprocess.run(('./correlation.py --x=AddBlockOps --y=BytesWritten %s' %namenode_file_new).split(' '), stdout = subprocess.PIPE)
-
-'''
 
 x_read = list()
 y_read = list()
