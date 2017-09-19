@@ -3,6 +3,7 @@ from sys import argv
 from csv import CSV
 from getopt import getopt, GetoptError
 from copy import deepcopy
+import pdb
 
 config = dict()
 
@@ -32,6 +33,7 @@ def help():
     print ('--master-fields    Master fields')
     print ('--slave-fields     Slave fields')
     print ('--output           Output file')
+    print ('--abs              Do not relativelize')
 
 
 def extract_args(args):
@@ -40,7 +42,7 @@ def extract_args(args):
         opts, argvs = getopt(args, 'p:m:s:n:c:d:C:D:f:g:',
             ['prefix=', 'master=', 'slaves=', 'name=', 'category-master=',
             'category-slave=', 'path=', 'date=', 'master-fields=', 'slave-fields=',
-            'output='])
+            'output=', 'abs'])
         for key, value in opts:
             if key == '--master-fields':
                 config['master-fields'] = value.split(',')
@@ -48,6 +50,8 @@ def extract_args(args):
                 config['slave-fields'] = value.split(',')
             elif key == '--slaves':
                 config['slaves'] = value.split(',')
+            elif key == '--abs':
+                config['abs'] = True
             else:
                 config[key[2:]] = value
     except (GetoptError, KeyError) as e:
@@ -115,7 +119,8 @@ if __name__ == '__main__':
         slave_tables.append(tbl)
 
     aggregated = uniformize(master_table, slave_tables)
-    relativelize(aggregated)
+    if not get_config('abs', False):
+        relativelize(aggregated)
 
     with open(get_config('output', get_config('name')), 'w') as f:
         f.write(str(aggregated))
