@@ -14,6 +14,7 @@ class CSV(object):
                 content = obj.read()
                 lines = content.splitlines()
                 head = lines[0].split(',')
+                head = list(filter(None, head))
                 for item in head:
                     key = item.lstrip().rstrip()
                     if not key:
@@ -26,9 +27,12 @@ class CSV(object):
                         if i >= len(elements):
                             self.c[head[i]].append(0.0)
                         else:
-                            self.c[head[i]].append(
-                                float(elements[i].lstrip().rstrip())
-                            )
+                            try:
+                                self.c[head[i]].append(
+                                    float(elements[i].lstrip().rstrip())
+                                )
+                            except ValueError:
+                                self.c[head[i]].append(0.0)
             except AttributeError:
                 return
 

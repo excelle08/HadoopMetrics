@@ -1,56 +1,8 @@
 #!/usr/bin/python
-"""
-\begin{tikzpicture}
-    \pgfplotsset{every tick label/.append style={font=\tiny}}
-    \pgfplotsset{legend style={font=\tiny, at={(1,0)}, anchor=south east}}
-    \begin{axis}[
-        width=7cm,
-        height=4.33cm,
-        ylabel={GetBlockLocations},
-        xlabel={time},
-        ymax=903,
-        axis y line*=left
-    ]
-
-    \addplot[smooth,zebrared] coordinates {
-        (0.000000, 0.000000)
-        (50.000000, 4.000000)
-        (100.000000, 5.000000)
-        (150.000000, 5.000000)
-        (200.000000, 19.000000)
-        (250.000000, 23.000000)
-        (300.000000, 29.000000)
-        (350.000000, 75.000000)
-    };
-    \label{plot:y1}
-    \addlegendentry{GetBlockLocations}
-    \end{axis}
-
-    \begin{axis}[
-        width=7cm,
-        height=4.33cm,
-        ylabel={BytesRead},
-        ymax=40000000000,
-        axis y line*=right,
-        axis x line*=none
-    ]
-    \addlegendimage{/pgfplots/refstyle=plot:y1}\addlegendentry{GetBlockLocations}
-
-    \addplot[smooth,zebrablue] coordinates {
-        (0.000000, 0.000000)
-        (50.000000, 0.000000)
-        (100.000000, 9824.000000)
-        (150.000000, 9824.000000)
-        (200.000000, 2794739.000000)
-        (250.000000, 3236972.000000)
-    };
-    \addlegendentry{BytesRead}
-    \end{axis}
-\end{tikzpicture}
-"""
 from sys import argv
 from getopt import getopt, GetoptError
 import math
+import pdb
 cfg = dict()
 csv = dict()
 x = []
@@ -99,7 +51,7 @@ def help():
 def load_csv(fileobj):
     global csv, columns
     content = fileobj.read()
-    lines = content.split('\n')
+    lines = content.splitlines()
     headers = lines[0].split(',')
     for col in headers:
         if col:
@@ -115,18 +67,30 @@ def load_csv(fileobj):
 
 
 def load_xy(x_col, y1_col, y2_col):
+    last_values = [0,0,0]
     for i in range(len(csv[x_col])):
         if i >= len(csv[y1_col]) or i >= len(csv[y2_col]):
             break
+        if csv[x_col][i] < 0 or csv[y1_col][i] < 0 or csv[y2_col][i] < 0:
+            continue
+        if csv[x_col][i] < last_values[0]:
+            continue
+        if csv[y1_col][i] < last_values[1]:
+            continue
+        if csv[y2_col][i] < last_values[2]:
+            continue
         x.append(float(csv[x_col][i]))
         y1.append(float(csv[y1_col][i]))
         y2.append(float(csv[y2_col][i]))
+        last_values[0] = x[i]
+        last_values[1] = y1[i]
+        last_values[2] = y2[i]
 
 
 def round_to_max(num):
-    index = math.floor(math.log10(num))
+    index = math.floor(math.log10(num)) if num > 0 else 0
     tenth = math.pow(10, index - 1)
-    return (num // tenth + 1) * tenth
+    return (num // tenth + 1) * tenth * 1.1
 
 
 if __name__ == '__main__':
@@ -158,13 +122,13 @@ if __name__ == '__main__':
         ylabel={%s},\n\
         xlabel={%s},\n\
         ymax=%d,\n\
-        axis y line*=left\n\
+        axis y line*=left,\n\
+        y axis style=zebrablue,\n\
     ]\n\
 \n\
-    \\addplot[smooth,mark=o,zebrared] coordinates {\n\
+    \\addplot[smooth,mark=none,line width=1pt,zebrablue] coordinates {\n\
         %s\
     };\n\
-    \\addlegendentry{%s}\n\
     \end{axis}\n\
 \n\
     \\begin{axis}[\n\
@@ -173,18 +137,18 @@ if __name__ == '__main__':
         ylabel={%s},\n\
         ymax=%d,\n\
         axis y line*=right,\n\
-        axis x line*=none\n\
+        axis x line*=none,\n\
+        y axis style=zebrared\n\
+    ]\
 \n\
-    \\addplot[smooth,mark=o,zebrared] coordinates {\n\
+    \\addplot[smooth,mark=none,line width=1pt,zebrared] coordinates {\n\
         %s\
     };\n\
-    \\addlegendentry{%s}\n\
     \end{axis}\n\
-\end{tikzpicture}\n' % (config('y1label', config('y1')),
-                        config('xlabel', config('x')), round_to_max(y1_max), data_pair_1,
-                        config('y1label', config('y1')),
-                        config('y2label', config('y2')),
-                        round_to_max(y2_max), data_pair_2, config('y2label', config('y2')))
+\end{tikzpicture}\n' % (config('y1label', config('y1')).replace('_', '\\_'),
+                        config('xlabel', config('x')).replace('_', '\\_'), round_to_max(y1_max), data_pair_1,
+                        config('y2label', config('y2')).replace('_', '\\_'),
+                        round_to_max(y2_max), data_pair_2)
 
     if config('tofile', False):
         filename = '%s-%s-%s-%s.tex' % (''.join(config('file').split('.')[:-1]),

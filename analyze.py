@@ -157,7 +157,10 @@ if __name__ == '__main__':
 
     for i in range(len(aggregated_table[fields[0]])):
         for key in fields:
-            csv += '%s,' % str(aggregated_table[key][i])
+            try:
+                csv += '%s,' % str(aggregated_table[key][i])
+            except IndexError:
+                continue
         csv += '\n'
 
     #for i in range(len(table[namenode])):

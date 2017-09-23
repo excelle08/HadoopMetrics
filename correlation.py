@@ -20,7 +20,7 @@ def config(key, default=None):
     if default is not None :
         return default
     else:
-        raise Exception('Missing config key %s' % key)
+        raise KeyError('Missing config key %s' % key)
 
 csv = dict()
 columns = list()
@@ -35,7 +35,7 @@ def isdecimal(text):
 def load_csv(fileobj):
     global csv, columns
     content = fileobj.read()
-    lines = content.split('\n')
+    lines = content.splitlines()
     headers = lines[0].split(',')
     for col in headers:
         if col:
@@ -82,7 +82,7 @@ def compute_rel():
             return 0, y[0], 1, 2
         else:
             stderr.write('\033[1;31m Insufficient samples - Cannot compute.\033[0m\n')
-            exit(0)
+            raise ArithmeticError('Insufficient Samples')
     for i in range(n):
         x_bar += x[i] / n
         y_bar += y[i] / n
@@ -96,7 +96,7 @@ def compute_rel():
 
     if isclose(div_x, 0.0) or isclose(div_y, 0.0):
         stderr.write('\033[1;31m Variance is zero.\033[0m\n')
-        exit(0)
+        raise ArithmeticError('Variance is Zero')
     b = cov_xy / div_x
     a = y_bar - b * x_bar
     r = cov_xy / (math.sqrt(div_x) * math.sqrt(div_y))
@@ -134,5 +134,5 @@ if __name__ == '__main__':
         for i in range(len(x)):
             print ('%f,\t%f' % (x[i], y[i]))
     print('%s,%s,%s,%d,%f,%f,%f' % (file_path, config('x'), config('y'),
-            n, b, a, r))
+            n, b/1048576, a/1048576, r))
 

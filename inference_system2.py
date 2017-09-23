@@ -1,10 +1,13 @@
+#!/usr/bin/env python3
 import math
-from sys import stderr
+from sys import stderr, argv
 from is_close import isclose
 
+if len(argv) < 3:
+    print('Usage: %s <input path> <output path>' % argv[0])
+    exit(1)
 
-print('Please input the path of NAMENODE OUTPUT FILE(.csv) you want to infer:')
-namenode_file = input()
+namenode_file = argv[1]
 
 namenode_metric_r = list()
 namenode_metric_w = list()
@@ -13,20 +16,30 @@ datanode_metric_w = list()
 datanode_metric_r_infer = list()
 datanode_metric_w_infer = list()
 
+hdfs = True
+
 with open(namenode_file, 'r') as f:
     lines = f.readlines()
     lines_before = lines[1:]
     lines_cut = lines_before[::5]
+    if lines[0].split(',')[0] == 'epoch':
+        hdfs = False
 
     ###append actual data to separate list###
     for line in lines[1:]:
         if line  == '\n':
             continue
-
-        namenode_metric_r.append(float(line.split(',')[0]))
-        namenode_metric_w.append(float(line.split(',')[1]))
-        datanode_metric_r.append(float(line.split(',')[2]))
-        datanode_metric_w.append(float(line.split(',')[3]))
+        if hdfs:
+            namenode_metric_r.append(float(line.split(',')[0]))
+            namenode_metric_w.append(float(line.split(',')[1]))
+            datanode_metric_r.append(float(line.split(',')[2]))
+            datanode_metric_w.append(float(line.split(',')[3]))
+        else:
+            namenode_metric_r.append(float(line.split(',')[1]))
+            namenode_metric_w.append(float(line.split(',')[2]))
+            datanode_metric_r.append(float(line.split(',')[5]))
+            datanode_metric_w.append(float(line.split(',')[4]))
+            
 
 x_read = list()
 y_read = list()
@@ -36,18 +49,23 @@ y_write = list()
 for line in lines_cut:
     if line == '\n':
         continue
-    x_read.append(float(line.split(',')[0]))
-    y_read.append(float(line.split(',')[2]))
-    x_write.append(float(line.split(',')[1]))
-    y_write.append(float(line.split(',')[3]))
+    if hdfs:
+        x_read.append(float(line.split(',')[0]))
+        y_read.append(float(line.split(',')[2]))
+        x_write.append(float(line.split(',')[1]))
+        y_write.append(float(line.split(',')[3]))
+    else:
+        x_read.append(float(line.split(',')[1]))
+        y_read.append(float(line.split(',')[5]))
+        x_write.append(float(line.split(',')[2]))
+        y_write.append(float(line.split(',')[4]))
 
 def compute_rel(x,y):
     x_bar = 0; y_bar = 0; n = len(x)
     cov_xy = 0
     div_x = 0; div_y = 0
     if n <= 1:
-        stderr.write('\033[1;31m Insufficient samples - Cannot compute.\033[0m\n')
-        exit(0)
+        return 0, 0, 0, 0
     for i in range(n):
         x_bar += x[i] / n
         y_bar += y[i] / n
@@ -110,16 +128,23 @@ print(datanode_metric_w)            #BytesWritten
 '''
 
 csv = ''
-fields = ['BytesRead_infer','BytesRead','BytesWritten_infer','BytesWritten']
+epoch = 0
+fields = ['time','BytesRead_infer','BytesRead','BytesWritten_infer','BytesWritten']
 for field in fields:
     csv += '%s,'%field
 csv += '\n'
 
 for i in range(len(datanode_metric_r_infer)):
+    csv += '%d,' % epoch
+    epoch += 5
     csv += '%s,'%datanode_metric_r_infer[i]
     csv += '%s,' % datanode_metric_r[i]
     csv += '%s,' % datanode_metric_w_infer[i]
     csv += '%s,' % datanode_metric_w[i]
     csv += '\n'
 
-print(csv)
+#print(csv)
+
+with open(argv[2], 'w') as f:
+    f.write(csv)
+
