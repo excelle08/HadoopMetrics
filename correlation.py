@@ -106,7 +106,7 @@ def compute_rel():
 def extract_args(args):
     global cfg
     try:
-        opts, argvs = getopt(args, 'vx:y:', ['verbose', 'ignore-zero-var', 'x=', 'y='])
+        opts, argvs = getopt(args, 'vmx:y:', ['verbose', 'mb', 'ignore-zero-var', 'x=', 'y='])
         for key, value in opts:
             if key in ('-v', '--verbose'):
                 cfg['verbose'] = True
@@ -116,6 +116,8 @@ def extract_args(args):
                 cfg['y'] = value
             if key in ('--ignore-zero-var'):
                 cfg['ignore-zero-var'] = True
+            if key in ('--mb', '-m'):
+                cfg['mb'] = True
         cfg['file'] = argvs[0]
     except (GetoptError, KeyError):
         help()
@@ -133,6 +135,9 @@ if __name__ == '__main__':
         print ('\tx\t,\ty')
         for i in range(len(x)):
             print ('%f,\t%f' % (x[i], y[i]))
-    print('%s,%s,%s,%d,%f,%f,%f' % (file_path, config('x'), config('y'),
-            n, b/1048576, a/1048576, r))
+    if config('mb', default=False):
+        b /= 1048576
+        a /= 1048576
+    print('%s,%s,%s,%d,%.3f,%.3f,%.4f' % (file_path, config('x'), config('y'),
+            n, b, a, r))
 

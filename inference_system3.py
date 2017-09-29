@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 from csv import CSV
-from sys import argv
+from sys import argv, stderr
 from is_close import isclose
 from statistic import compute_rel
 from tube import Tube
 from getopt import getopt, GetoptError
+import time
 
 cfg = dict()
+
+
+def logging(msg):
+    if config('verbose', False):
+        print(msg, file=stderr)
 
 
 def config(key, default=None):
@@ -21,7 +27,7 @@ def config(key, default=None):
 def extract_args(args):
     global cfg
     try:
-        opts, argvs = getopt(args, '', ['mdf=', 'iof=', 'tf=', 'tubesize=', 'if=', 'fd-fm=', 'help'])
+        opts, argvs = getopt(args, 'thv', ['mdf=', 'iof=', 'tf=', 'tubesize=', 'if=', 'fd-fm=', 'help', 'timing', 'verbose'])
         for key, value in opts:
             if key == '--mdf':
                 cfg['mdf'] = value.split(',')
@@ -35,8 +41,12 @@ def extract_args(args):
                 cfg['timef'] = value
             if key == '--fd-fm':
                 cfg['fd-fm'] = int(value)
-            if key == '--help':
+            if key in ('--help', '-h'):
                 help()
+            if key in ('--timing', '-t'):
+                cfg['timing'] = True
+            if key in ('--verbose', '-v'):
+                cfg['verbose'] = True
     except (GetoptError, KeyError):
         help()
     except ValueError:
@@ -85,6 +95,7 @@ if __name__ == '__main__':
     br, ar, rr, nr = -1, 0, 0, 0  # Set b = -1 to imply unintialized specs
     bw, aw, rw, nw = -1, 0, 0, 0
 
+    start_time = time.time()
     for i in range(len(source)):
         if i % fd_fm == 0:
             samples_r.push((
@@ -99,7 +110,9 @@ if __name__ == '__main__':
                 x_w = [samples_w[j][0] for j in range(len(samples_w))]
                 y_w = [samples_w[j][1] for j in range(len(samples_w))]
                 br, ar, rr, nr = compute_rel(x_r, y_r)
+                logging('br=%.3f, rr=%.3f, nr=%.3f' % (br, rr, nr))
                 bw, aw, rw, nw = compute_rel(x_w, y_w)
+                logging('bw=%.3f, rw=%.3f, nw=%.3f' % (bw, rw, nw))
         r_infer = br * source[mdfr][i] + ar if br >= 0 else source[iofr][i]
         r = source[iofr][i]
         w_infer = bw * source[mdfw][i] + aw if bw >= 0 else source[iofw][i]
@@ -111,4 +124,10 @@ if __name__ == '__main__':
             'write-infer': w_infer,
             'write': w
         })
-    print(spec)
+    end_time = time.time()
+    if config('timing', False):
+        time_elapse = end_time - start_time
+        throughput = len(source) / time_elapse
+        print('Time elapsed: %.2f msec, Throughput: %.2f metrics/sec' % (time_elapse*1000, throughput))
+    else:
+        print(spec)

@@ -23,7 +23,7 @@ def config(key, default=None):
 def extract_args(args):
     global cfg
     try:
-        opts, argvs = getopt(args, '', ['x=', 'y1=', 'y2=', 'xlabel=', 'y1label=', 'y2label', 'tofile'])
+        opts, argvs = getopt(args, '', ['x=', 'y1=', 'y2=', 'xlabel=', 'y1label=', 'y2label=', 'xunit=', 'y1unit=', 'y2unit=', 'tofile'])
         for key, value in opts:
             if key == '--x':
                 cfg['x'] = value
@@ -37,6 +37,12 @@ def extract_args(args):
                 cfg['y1label'] = value
             if key == '--y2lable':
                 cfg['y2lable'] = value
+            if key == '--xunit':
+                cfg['xunit'] == value
+            if key == '--y1unit':
+                cfg['y1unit'] == value
+            if key == 'y2unit':
+                cfg['y2unit'] = value
             if key == '--tofile':
                 cfg['tofile'] = True
         cfg['file'] = argvs[0]
@@ -119,8 +125,8 @@ if __name__ == '__main__':
     \\begin{axis}[\n\
         width=7cm,\n\
         height=4.33cm,\n\
-        ylabel={%s},\n\
-        xlabel={%s},\n\
+        ylabel={%s (%s)},\n\
+        xlabel={%s (%s)},\n\
         ymax=%d,\n\
         axis y line*=left,\n\
         y axis style=zebrablue,\n\
@@ -134,7 +140,7 @@ if __name__ == '__main__':
     \\begin{axis}[\n\
         width=7cm,\n\
         height=4.33cm,\n\
-        ylabel={%s},\n\
+        ylabel={%s (%s)},\n\
         ymax=%d,\n\
         axis y line*=right,\n\
         axis x line*=none,\n\
@@ -145,9 +151,9 @@ if __name__ == '__main__':
         %s\
     };\n\
     \end{axis}\n\
-\end{tikzpicture}\n' % (config('y1label', config('y1')).replace('_', '\\_'),
-                        config('xlabel', config('x')).replace('_', '\\_'), round_to_max(y1_max), data_pair_1,
-                        config('y2label', config('y2')).replace('_', '\\_'),
+\end{tikzpicture}\n' % (config('y1label', config('y1')).replace('_', '\\_'), config('y1unit', 'bytes'),
+                        config('xlabel', config('x')).replace('_', '\\_'), config('xunit', 'sec'), round_to_max(y1_max), data_pair_1,
+                        config('y2label', config('y2')).replace('_', '\\_'), config('y2unit', 'bytes'),
                         round_to_max(y2_max), data_pair_2)
 
     if config('tofile', False):

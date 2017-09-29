@@ -20,7 +20,7 @@ def config(key, default=None):
 def extract_args(args):
     global cfg
     try:
-        opts, argvs = getopt(args, '', ['x=', 'y=', 'xlabel=', 'ylabel=', 'tofile'])
+        opts, argvs = getopt(args, '', ['x=', 'y=', 'xlabel=', 'ylabel=', 'xunit=', 'yunit=', 'tofile'])
         for key, value in opts:
             if key == '--x':
                 cfg['x'] = value
@@ -30,6 +30,10 @@ def extract_args(args):
                 cfg['xlabel'] = value
             if key == '--ylabel':
                 cfg['ylabel'] = value
+            if key == '--xunit':
+                cfg['xunit'] = value
+            if key == '--yunit':
+                cfg['yunit'] = value
             if key == '--tofile':
                 cfg['tofile'] = True
         cfg['file'] = argvs[0]
@@ -70,7 +74,7 @@ if __name__ == '__main__':
         height=4.33cm,\n\
         tick pos=left,\n\
         ymajorgrids=true,\n\
-        ylabel=%s,\n\
+        ylabel={%s (%s)},\n\
         xlabel={%s},\n\
         ymax=%d,\n\
         xmajorgrids, scaled x ticks={base 10:-%d},\n\
@@ -80,8 +84,8 @@ if __name__ == '__main__':
         %s\
     };\n\
     \end{axis}\n\
-    \end{tikzpicture}\n' % (config('ylabel', config('y')).replace('_', '\\_'),
-                            config('xlabel', config('x')).replace('_', '\\_'),
+    \end{tikzpicture}\n' % (config('ylabel', config('y')).replace('_', '\\_'), config('yunit', 'bytes'),
+                            config('xlabel', config('x')).replace('_', '\\_'), 
                             round_to_max(y_max),
                             int(math.log10(x_max)) - 1,
                             round_to_max(x_max), b, a, data_pair)
