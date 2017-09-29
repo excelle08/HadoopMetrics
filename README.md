@@ -21,8 +21,8 @@ for master and slaves respectively
 
 ### `correlation.py`
 
-Compute the Pearson correlation coefficient $R$ as well as coefficents of the linear regression equation
-$y = bx + a$ of two groups of values $X$ and $Y$ which are extracted from specified CSV table.
+Compute the Pearson correlation coefficient _R_ as well as coefficents of the linear regression equation
+y = _b_x + _a_ of two groups of values _X_ and _Y_ which are extracted from specified CSV table.
 
 ### `everything`
 
@@ -46,12 +46,12 @@ Prototype v3
 
 ### `line.py`
 
-Generate LaTex code of a line diagram consisting of three groups of data $X$, $y1$, $y2$. Generated
+Generate LaTex code of a line diagram consisting of three groups of data _X_, _y1_, _y2_. Generated
 code is based on `pgfplots` package.
 
 ### `plot.py`
 
-Generate LaTex code of a scatter plot consisting of two groups of data $x$ and $y$.
+Generate LaTex code of a scatter plot consisting of two groups of data _x_ and _y_.
 
 ### `task`
 
